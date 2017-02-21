@@ -12,11 +12,11 @@ import Functions as Fun
 
 # Data parameters
 dataFolder = 'Data\\'
-dataFile = 'r_crit_minSepFrac_0-2.pkl'
+dataFile = 'r_crit.pkl'
 # Save parameters
 savePlot = True
 saveFolder = 'plot_r_crit\\'
-saveName = 'r_crit_vs_RPM_minSepFrac_0-2_log'
+saveName = 'r_crit_log'
 # Disk Parameters
 diskRad = 15.0 # [cm]
 radiusNoisy = diskRad / 4.0

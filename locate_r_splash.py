@@ -21,13 +21,15 @@ savePlots = False
 saveData = False
 saveName = 'r_splash.pkl'
 # Method parameters
-aMaxCond = False
-aMeanCond = True # should be either aMaxCond or aMeanCond
-diffThresh = 0.001
+aMaxCond = True
+aMeanCond = False # should be either aMaxCond or aMeanCond
+diffThresh = 0
+radiusNoisy = 3.75 # [cm] radius within which image-processing is poor
+radiusMax = 10 # [cm] radius outside which stagnation will mean water reached wafer edge
 # Condition parameters
 QList = np.array([500,1000,1500,2000,2500,3000,3250])
 RPMList =  np.array([0])
-conditionList = ['Dry'] #['Dry','Water', '3mM SDS', '6.5mM SDS', '10mM SDS', 'Water with 10mM SDS'] 
+conditionList = ['Dry','Water', '3mM SDS', '6.5mM SDS', '10mM SDS', 'Water with 10mM SDS'] 
 # Plot parameters
 showPlots = True
 legend_fs = 12 # font size of legend
@@ -75,7 +77,7 @@ for i in range(N1):
         # Experimental Conditions
         print (RPM, QTarget, condition)
         
-        # Set the indicies of the array for assignment of plotting data
+        # Set the indices of the array for assignment of plotting data
         i_Q = np.argmax(QList==QTarget)
 
         # Parse remaining experiment data
@@ -94,6 +96,8 @@ for i in range(N1):
         aMean = aMean[time > t0]
         Q = Fun.convert_flowrate(QTarget)
         
+        # Limit analysis to outside of noisy radius
+        firstCleanInd = [k for k in range(len(time)) if aMean[k] > radiusNoisy][0]
         # Calculate Splash Radius
         if aMaxCond:
             aDiff = aMax[1:len(aMax)] - aMax[0:len(aMax)-1]
@@ -101,30 +105,31 @@ for i in range(N1):
             aDiff = aMean[1:len(aMean)] - aMean[0:len(aMean)-1]
         
         # Record mean radius when aMax stagnates - this is what is helpful for identifying peaks in EP
-        rSplash = [aMean[i] for i in range(len(aDiff)) if aDiff[i] < diffThresh*1000/fps]
-        if not rSplash:
-            rSplash = 0
+        rSplashInd = [i for i in range(firstCleanInd, len(aDiff)) if aDiff[i] <= diffThresh*1000/fps]
+        if not rSplashInd or rSplashInd[0] == firstCleanInd:
+            rSplash = radiusNoisy
         else:
-            rSplash = rSplash[0]
-            if rSplash > 10:
-                rSplash = 0
+            rSplash = aMean[rSplashInd[0]]
+            if rSplash > radiusMax:
+                rSplash = radiusNoisy
             
         print "Splash Radius is " + str(rSplash)
         rSplashData[condition][i_Q] = rSplash
        
         # Plot
         if showPlots:
-            plt.plot(time[0:len(time)-1], aDiff, 'g.', linewidth=3, label='aMax')
+            plt.plot(time[0:len(time)-1], aDiff, 'g.', linewidth=3, label='Diff in aMax')
+            plt.plot(time[0:len(time)], aMax, 'k.', linewidth=3, label='aMax')
 #            # Show critical point
 #            axes = plt.gca()
 #            yLim = axes.get_ylim()
 #            plt.plot((tRCrit, tRCrit), yLim, 'r--', label='critical point')
             # Formatting
             plt.xlabel('Time [sec]')
-            plt.ylabel('aMax [cm]')
+            plt.ylabel('Diff in aMax [cm]')
             plt.grid()
             plt.legend(loc=0, fontsize=legend_fs)
-            pltTitle = 'Finding Splash Radius - Q = %i' %(int(round(Q,-1)))
+            pltTitle = 'Finding Splash Radius - Q = %i, Condition - %s' %(int(round(Q,-1)), condition)
             plt.title(pltTitle)
             plt.ylim([-diffThresh*1000/fps, diffThresh*1000/fps])
 #            if savePlots:

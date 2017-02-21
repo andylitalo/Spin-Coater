@@ -26,7 +26,7 @@ saveRCritName = 'r_crit_splash.pkl'
 # Condition parameters
 QList = np.array([500,1000,1500,2000,2500,3000,3250])
 RPMList =  np.array([0,30,120,250,500,750,1000])
-conditionList = ['Dry'] #['Dry','Water', '3mM SDS', '6.5mM SDS', '10mM SDS', 'Water with 10mM SDS'] 
+conditionList = ['Dry','Water', '3mM SDS', '6.5mM SDS', '10mM SDS', 'Water with 10mM SDS'] 
 # MinSep Analysis Parameters
 minSepCondition = False # require r_crit reached if aMax - aMin2 > minSep
 minSep = 1.7 # [cm] critical value of aMax - aMin2 that sets upper limit on 
@@ -247,7 +247,7 @@ for i in range(N1):
             plt.ylabel('EP / aMax - aMin2 [cm]')
             plt.grid()
             plt.legend(loc=0, fontsize=legend_fs)
-            pltTitle = 'Finding Critical Radius - RPM = %i, Q = %i' %(RPM, int(round(Q,-1)))
+            pltTitle = 'Finding Critical Radius - RPM = %i, Q = %i, %s' %(RPM, int(round(Q,-1)), condition)
             plt.title(pltTitle)
             if savePlots:
                 savePlotName = Fun.get_save_name(saveFolder, RPM, QTarget, condition, '')

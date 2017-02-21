@@ -14,8 +14,8 @@ import Functions as Fun
 dataFolder = 'Data\\'
 dataFile = 'r_splash.pkl'
 # Save parameters
-savePlot = False
-saveFolder = 'plot_r_crit\\'
+savePlot = True
+saveFolder = 'plot_r_splash\\'
 saveName = 'r_splash_vs_Q'
 # Disk Parameters
 diskRad = 15.0 # [cm]
@@ -24,7 +24,7 @@ radiusNoisy = diskRad / 4.0
 logScale = False
 legend_fs = 8
 xLim = [300, 3000]
-yLim = [diskRad/100, diskRad/2]
+yLim = [diskRad/100, diskRad/1.5]
 
 
 ###############################################################################
@@ -43,14 +43,18 @@ fig = plt.figure()
 for i in range(len(conditionList)):
     condition = conditionList[i]
     rSplash = rSplashData[condition] # matrix of r_crit where rows=Q and cols=RPM
-    QActual = []
+    rSplash2Plot = []
+    Q2Plot = []
     # Plot one trendline per Q
     for r in range(len(QList)):
-        QActual += [Fun.convert_flowrate(QList[r])]
+        if rSplash[r] != 0:
+            Q2Plot += [Fun.convert_flowrate(QList[r])]
+            rSplash2Plot += [rSplash[r]]
+            
         
     # Plot trendline
     label = condition
-    plt.plot(QActual, rSplash, linewidth=2, marker='o', label=label)
+    plt.plot(Q2Plot, rSplash2Plot, linewidth=2, marker='o', label=label)
     
     # Format plot
     plt.xlabel('Jet Flow Rate [RPM]')
