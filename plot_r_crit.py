@@ -16,15 +16,20 @@ dataFile = 'r_crit.pkl'
 # Save parameters
 savePlot = True
 saveFolder = 'plot_r_crit\\'
-saveName = 'r_crit_log'
+saveName = 'r_crit_log_aristoff'
 # Disk Parameters
 diskRad = 15.0 # [cm]
 radiusNoisy = diskRad / 4.0
+aJet = 0.2 # jet radius [cm]
+nu = 0.01 # kinematic viscosity of water in cgs [Poise/(g/cm3)]
 # Plot parameters
 logScale = True
+aristoffCond = True
 legend_fs = 8
 xLim = [100, 1000]
-yLim = [diskRad/10, diskRad]
+yLim = [1, diskRad]
+# Conversions
+s_per_min = 1./60
 
 
 ###############################################################################
@@ -41,6 +46,7 @@ conditionList = rCritData['conditionList']
 
 # Plot on one figure
 fig = plt.figure()
+cmap = plt.get_cmap('jet')
 for i in range(len(conditionList)):
     condition = conditionList[i]
     rCritMat = rCritData[condition] # matrix of r_crit where rows=Q and cols=RPM
@@ -58,8 +64,14 @@ for i in range(len(conditionList)):
         RPMListClean = RPMList[cleanInds]
         rCritClean = rCrit[cleanInds]
         # Plot trendline
+        color = cmap(float(r)/len(QList))
         label = 'Q = %i mL/min' % (int(round(Q, -1)))
-        plt.plot(RPMListClean, rCritClean, linewidth=2, marker='o', label=label)
+        plt.plot(RPMListClean, rCritClean, linewidth=2, marker='o', label=label,c=color)
+        if aristoffCond:
+            Qcm3s = Q*s_per_min
+            Re = Qcm3s/(aJet*nu)
+            rAristoff = 0.315*aJet*Re**(1./3)
+            plt.plot(RPMListClean, rAristoff*np.ones_like(RPMListClean), linewidth=2,c=color)
     
     # Format plot
     plt.xlabel('Rotation Rate [RPM]')

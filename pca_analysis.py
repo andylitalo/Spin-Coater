@@ -19,15 +19,19 @@ from scipy import signal
 # User parameters
 folder = 'Data\\Fourier Decompositions\\'
 fileName = 'Dry_0120RPM_0500mLmin_0500FPS_contour.pkl'
-numInfoFields = 7 # number of fields in data dictionary for info on experiment
-selectedK = 15 # fourier component to plot--for some reason >=20 isn't included in kVals?
+rCritFilePath = 'Data\\r_crit.pkl'
+numInfoFields = 7 # number of fields in data dictionary for info on experiment--7 default, 8 if stride included
+selectedK = 15
 frame2Sample = 800
+diskRad = 15
+diskFrac = 0.9
 
 
 # Load data
-with open(folder + fileName, 'rb') as f:
-    allData = pkl.load(f)
-   
+if 'allData' not in globals():
+    with open(folder + fileName, 'rb') as f:
+        allData = pkl.load(f)
+       
 data = allData['Dry_0120RPM_0500mLmin_0500FPS_c']
 condition = data['condition']
 flowRate = data['flowRate']
@@ -38,11 +42,43 @@ time = data['time']
 tMaxEP = data['tMaxEP']
 keys = data.keys()
 
-kMag = np.zeros([len(time),1])
-sSample = []
-aSample = []
-for i in range(len(keys)-numInfoFields):
-    
+# Load rCrit Data
+with open(rCritFilePath, 'rb') as f:
+    rCritData = pkl.load(f)
+
+QList = rCritData['QList']
+RPMList = rCritData['RPMList']
+i_Q = np.argmax(QList==flowRate)
+j_RPM = np.argmax(RPMList==RPM)
+rCrit = rCritData[condition][i_Q, j_RPM]
+
+NMax = 0
+nFrames = len(keys)-numInfoFields
+iStart = 0
+iEnd = 0
+aMeanPrev = 0
+for i in range(nFrames):
+    contour = data[keys[i]]
+    # Update max number of Fourier modes, NMax
+    s = contour[0,:]
+    N = len(s)
+    NMax = max(NMax, N)
+    # Check if unconstrained rivulet growth stage reached (iStart:iEnd)
+    a = contour[1,:]
+    aMean = np.mean(a)
+    aMax = np.max(a)
+    if aMeanPrev < rCrit and aMean >= rCrit:
+        iStart = i
+    aMeanPrev = aMean
+    if aMax >= diskFrac*diskRad:
+        iEnd = i
+        break
+ 
+NMax = NMax - (NMax%2) # round NMax down to nearest even number
+kMat = np.zeros([NMax, iEnd - iStart])
+rZ = NMax/2 # row for zero mode (k = 0)
+
+for i in range(iStart, iEnd):    
     contour = data[keys[i]]
 
     s = contour[0,:]
@@ -50,7 +86,7 @@ for i in range(len(keys)-numInfoFields):
     N = len(s)
     
     # fit cubic spline
-    cs = scipy.interpolate.interp1d(s, a, kind='cubic') # find better interpolation function
+    cs = scipy.interpolate.interp1d(s, a, kind='cubic')
     
     # resample
     x = np.linspace(0, max(s), N)
@@ -75,26 +111,9 @@ for i in range(len(keys)-numInfoFields):
         
     # Frame-by-frame Fourier Analysis - record dominant mode
     k = fft(yFilt)
-    kVals = np.concatenate((np.arange(0,N/2-1),np.arange(-N/2,-1)))
-    kMag[i] = k[(kVals == selectedK)]
+    kMat[rZ:(rZ+N/2),i] = k[:N/2] # k organized from n = 0:N/2-1, -N/2:-1 modes
+    kMat[(rZ-N/2):rZ,i] = k[(N+1)/2:] # +1 skips largest mode for cases with odd N
     
-# plot magnitude of a few dominant modes over time, as in Fraysse and Homsy
-plt.plot(time[time<=tMaxEP], abs(kMag[time<=tMaxEP]))
-plt.xlabel('Time (s)')
-plt.ylabel('Magnitude of 3rd Fourier Component')
-
-plt.figure()
-plt.plot(x, y)
-plt.title('Interpolated s vs. a')
-plt.xlabel('s')
-plt.ylabel('a')
-
-plt.figure()
-plt.plot(x, yFilt)
-plt.title('Interpolated s vs. a - Smoothed')
-plt.xlabel('s')
-plt.ylabel('a')
-
 plt.figure()
 plt.plot(sSample, aSample)
 plt.title('Interpolated s vs. a - Smoothed - Sampled from frame #' + str(frame2Sample))

@@ -13,7 +13,7 @@ import ImageProcessingFunctions as IPF
 # User parameters
 folder = 'C:\\Users\\Andy.DESKTOP-CFRG05F\\Documents\\Research\\Gerry\\Code\\Data\\Fourier Decompositions\\'
 fileString = '..\\..\\..\\Videos\\Videos\\Dry_0120RPM_0500mLmin_0500FPS_c_data.pkl'
-saveName = folder + 'Dry_0120RPM_0500mLmin_0500FPS_contour.pkl'
+saveName = folder + 'Dry_0120RPM_0500mLmin_0500FPS_contour.pkl' # TODO parse load file name to create save name automatically
 step = 1
 diskScale = 15 # radius in [cm]
 restrictAngle = False
@@ -198,7 +198,7 @@ for i in range(0,nFiles):
                 x1 = xData #[::stride] TODO what is stride?
                 y1 = yData #[::stride]
                 ds = np.sqrt((x1[1:]-x1[:-1])**2 + (y1[1:]-y1[:-1])**2)
-                length = np.sum(ds)
+                arcLength = np.sum(ds)
                 
                 # Create arclength array
                 ds = np.concatenate((np.array([0]), ds))
@@ -217,7 +217,7 @@ for i in range(0,nFiles):
                 aMean[j] = np.mean(a)
 #                aMax2[j] = np.percentile(a,98)
 #                aMin2[j] = np.percentile(a,2)
-                perimeter[j] = length
+                perimeter[j] = arcLength
                 
             except:
                 print 'Analysis failed on frame number %i' %j
