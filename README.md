@@ -9,8 +9,10 @@ by Lam Research.
 
 The work for the project was performed by Andy Ylitalo under the mentorship
 of John M. Frostad and with help from Dan Walls in Gerald Fuller's lab at
-Stanford University from 2015-2017. Additional analysis and publications
-were completed 2017 - 2019.
+Stanford University from 2015-2017. Andy Ylitalo developed the base of the
+image-processing and John Frostad added key functionalities.
+
+Additional analysis and publications were completed 2017 - 2019.
 
 ## Publications
 
